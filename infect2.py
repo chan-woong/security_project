@@ -2,7 +2,6 @@ import ctypes
 import sys
 import os
 import struct
-import subprocess
 
 SHELLCODE_SIZE = 32
 
@@ -26,7 +25,7 @@ def inject_data(pid, src, dst, size):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python inject.py <pid>")
+        print("Usage: python infect2.py <pid>")
         sys.exit(1)
 
     target_pid = int(sys.argv[1])
