@@ -46,7 +46,7 @@ class user_regs_struct(ctypes.Structure):
 def inject_data(pid, src, dst, size):
     libc = ctypes.CDLL('libc.so.6')
     offset = 0
-    for i in xrange(0, size, 4):
+    for i in range(0, size, 4):
         data = struct.unpack("<I", src[offset:offset+4])[0]
         if libc.ptrace(5, pid, ctypes.c_void_p(dst + offset), ctypes.c_void_p(data), 0) < 0:
             print("ptrace error")
