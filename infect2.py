@@ -81,11 +81,11 @@ def main():
 
     rip_address = regs_buf.rip
 
-    print("+ Injecting shell code at %p" % rip_address)
+    print("+ Injecting shell code at 0x%x" % rip_address)
     inject_data(target_pid, shellcode, rip_address, SHELLCODE_SIZE)
 
     rip_address += 2
-    print("+ Setting instruction pointer to %p" % rip_address)
+    print("+ Setting instruction pointer to 0x%x" % rip_address)
 
     ret = libc.ptrace(4, target_pid, None, ctypes.c_void_p(rip_address))  # PTRACE_SETREGS
     if ret < 0:
