@@ -48,7 +48,7 @@ def main():
         print("ptrace(GETREGS) error")
         sys.exit(1)
 
-    rip_address = struct.unpack("=Q", regs_buf[8:])[0]
+    rip_address = struct.unpack("=Q", regs_buf.raw[8:])[0]  # 수정된 부분
 
     print("+ Injecting shell code at %p" % rip_address)
     inject_data(target_pid, shellcode, rip_address, SHELLCODE_SIZE)
