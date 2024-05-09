@@ -56,7 +56,7 @@ def inject_shellcode(pid):
 if __name__ == "__main__":
     # 명령줄 인수로부터 실행 중인 프로세스의 PID 입력 받기
     if len(sys.argv) != 2:
-        print("Usage: python script.py <PID>")
+        print("Usage: python inject.py <PID>")
         sys.exit(1)
 
     pid = sys.argv[1]
